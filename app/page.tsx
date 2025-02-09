@@ -2,9 +2,20 @@
 
 import { useEffect, useState } from "react";
 
+// Define the interface for the data
+interface RouletteData {
+  id: number;
+  phone_number: string;
+  coupon_code: string;
+  spinsleft: number;
+  ip: string;
+  cookie: string;
+  time_stamp: string;
+}
+
 export default function Home() {
-  const [data1, setData1] = useState<any[]>([]);
-  const [data2, setData2] = useState<any[]>([]);
+  const [data1, setData1] = useState<RouletteData[]>([]);
+  const [data2, setData2] = useState<RouletteData[]>([]);
 
   // Thai date formatting utility
   const formatThaiDateTime = (dateString: string) => {
@@ -28,7 +39,7 @@ export default function Home() {
   const fetchData1 = () => {
     fetch("/api")
       .then((res) => res.json())
-      .then((result) => {
+      .then((result: RouletteData[]) => {
         if (Array.isArray(result)) {
           // Sort by timestamp in descending order
           const sortedData = result.sort((a, b) => 
@@ -50,7 +61,7 @@ export default function Home() {
   const fetchData2 = () => {
     fetch("/api2")
       .then((res) => res.json())
-      .then((result) => {
+      .then((result: RouletteData[]) => {
         if (Array.isArray(result)) {
           // Sort by timestamp in descending order
           const sortedData = result.sort((a, b) => 
@@ -131,7 +142,7 @@ export default function Home() {
               </thead>
               <tbody>
                 {data1.length > 0 ? (
-                  data1.map((row: any, index: number) => (
+                  data1.map((row, index) => (
                     <tr
                       key={index}
                       className={`${
@@ -147,7 +158,7 @@ export default function Home() {
                       </td>
                       <td
                         className={`px-6 py-4 text-sm font-semibold ${
-                          row.spins_left > 0 ? "text-green-600" : "text-red-600"
+                          row.spinsleft > 0 ? "text-green-600" : "text-red-600"
                         }`}
                       >
                         {row.spinsleft}
@@ -219,7 +230,7 @@ export default function Home() {
               </thead>
               <tbody>
                 {data2.length > 0 ? (
-                  data2.map((row: any, index: number) => (
+                  data2.map((row, index) => (
                     <tr
                       key={index}
                       className={`${
@@ -235,7 +246,7 @@ export default function Home() {
                       </td>
                       <td
                         className={`px-6 py-4 text-sm font-semibold ${
-                          row.spins_left > 0 ? "text-green-600" : "text-red-600"
+                          row.spinsleft > 0 ? "text-green-600" : "text-red-600"
                         }`}
                       >
                         {row.spinsleft}

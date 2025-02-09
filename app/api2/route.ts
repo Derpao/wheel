@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+import { RowDataPacket } from "mysql2";
 
 dotenv.config();
 
-export async function GET(req: Request) {
+// Define the interface for the data
+interface RouletteData {
+  id: number;
+  phone_number: string;
+  coupon_code: string;
+  spinsleft: number;
+  ip: string;
+  cookie: string;
+  time_stamp: string;
+}
+
+export async function GET() {
   try {
       // เชื่อมต่อฐานข้อมูล MySQL
       const connection = await mysql.createConnection({
@@ -16,7 +28,7 @@ export async function GET(req: Request) {
       });
 
       // ดึงข้อมูล 50 แถวล่าสุด เรียงตามเวลา
-      const [rows] = await connection.execute(
+      const [rows] = await connection.execute<RowDataPacket[]>(
           "SELECT * FROM wp_wprw_roulettewheel ORDER BY time_stamp DESC LIMIT 50"
       );
 
