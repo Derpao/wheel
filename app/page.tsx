@@ -142,7 +142,7 @@ export default function Home() {
               </thead>
               <tbody>
                 {data1.length > 0 ? (
-                  data1.map((row, index) => (
+                  data1.map((row: RouletteData, index: number) => (
                     <tr
                       key={index}
                       className={`${
@@ -230,7 +230,7 @@ export default function Home() {
               </thead>
               <tbody>
                 {data2.length > 0 ? (
-                  data2.map((row, index) => (
+                  data2.map((row: RouletteData, index: number) => (
                     <tr
                       key={index}
                       className={`${
