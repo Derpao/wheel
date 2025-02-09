@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import UpdateSpinsForm from "@/components/UpdateSpinsForm";
 
 // Define the interface for the data
 interface RouletteData {
@@ -16,6 +17,8 @@ interface RouletteData {
 export default function Home() {
   const [data1, setData1] = useState<RouletteData[]>([]);
   const [data2, setData2] = useState<RouletteData[]>([]);
+  const [isLoading1, setIsLoading1] = useState(false);
+  const [isLoading2, setIsLoading2] = useState(false);
 
   // Thai date formatting utility
   const formatThaiDateTime = (dateString: string) => {
@@ -35,63 +38,101 @@ export default function Home() {
     return `วัน${day}ที่ ${dayOfMonth} ${month} ${year} ${time}`;
   };
 
-  // ฟังก์ชันสำหรับดึงข้อมูลจากตารางแรก
-  const fetchData1 = () => {
-    fetch("/api")
-      .then((res) => res.json())
-      .then((result: RouletteData[]) => {
-        if (Array.isArray(result)) {
-          // Sort by timestamp in descending order
-          const sortedData = result.sort((a, b) => 
-            new Date(b.time_stamp).getTime() - new Date(a.time_stamp).getTime()
-          );
-          setData1(sortedData);
-        } else {
-          console.error("API response is not an array:", result);
-          setData1([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Fetch error:", err);
+  const fetchData1 = async () => {
+    setIsLoading1(true);
+    try {
+      const res = await fetch("/api");
+      const result: RouletteData[] = await res.json();
+      if (Array.isArray(result)) {
+        const sortedData = result.sort((a, b) => 
+          new Date(b.time_stamp).getTime() - new Date(a.time_stamp).getTime()
+        );
+        setData1([]);  // Clear data first
+        setTimeout(() => setData1(sortedData), 100); // Add data after a brief delay
+      } else {
+        console.error("API response is not an array:", result);
         setData1([]);
-      });
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setData1([]);
+    } finally {
+      setIsLoading1(false);
+    }
   };
 
-  // ฟังก์ชันสำหรับดึงข้อมูลจากตารางที่สอง
-  const fetchData2 = () => {
-    fetch("/api2")
-      .then((res) => res.json())
-      .then((result: RouletteData[]) => {
-        if (Array.isArray(result)) {
-          // Sort by timestamp in descending order
-          const sortedData = result.sort((a, b) => 
-            new Date(b.time_stamp).getTime() - new Date(a.time_stamp).getTime()
-          );
-          setData2(sortedData);
-        } else {
-          console.error("API response is not an array:", result);
-          setData2([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Fetch error:", err);
+  const fetchData2 = async () => {
+    setIsLoading2(true);
+    try {
+      const res = await fetch("/api2");
+      const result: RouletteData[] = await res.json();
+      if (Array.isArray(result)) {
+        const sortedData = result.sort((a, b) => 
+          new Date(b.time_stamp).getTime() - new Date(a.time_stamp).getTime()
+        );
+        setData2([]);  // Clear data first
+        setTimeout(() => setData2(sortedData), 100); // Add data after a brief delay
+      } else {
+        console.error("API response is not an array:", result);
         setData2([]);
-      });
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setData2([]);
+    } finally {
+      setIsLoading2(false);
+    }
   };
 
-  // โหลดข้อมูลครั้งแรก
   useEffect(() => {
     fetchData1();
     fetchData2();
   }, []);
 
-  // แยกฟังก์ชันรีเฟรช
   const handleRefreshTable1 = () => {
     fetchData1();
   };
 
   const handleRefreshTable2 = () => {
     fetchData2();
+  };
+
+  const handleUpdate1 = async (phoneNumber: string, spins: number) => {
+    const response = await fetch('/api/update-spins', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phone_number: phoneNumber,
+        spinsleft: spins
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Update failed');
+    }
+
+    fetchData1(); // Refresh the table
+  };
+
+  const handleUpdate2 = async (phoneNumber: string, spins: number) => {
+    const response = await fetch('/api2/update-spins', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phone_number: phoneNumber,
+        spinsleft: spins
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Update failed');
+    }
+
+    fetchData2(); // Refresh the table
   };
 
   return (
@@ -107,12 +148,19 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-blue-700">JK</h2>
             <button
               onClick={handleRefreshTable1}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-2 transition-colors duration-200"
+              className={`px-4 py-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 
+                active:scale-95 text-white rounded flex items-center gap-2 
+                transition-all duration-200 ${isLoading1 ? 'opacity-50' : ''}`}
+              disabled={isLoading1}
             >
-              <span>🔄</span>
-              รีเฟรชข้อมูล
+              <span className={`${isLoading1 ? 'animate-spin' : ''}`}>🔄</span>
+              {isLoading1 ? 'กำลังโหลด...' : 'รีเฟรชข้อมูล'}
             </button>
           </div>
+          <UpdateSpinsForm 
+            tableName="JK"
+            onUpdate={handleUpdate1}
+          />
           <div className="overflow-x-auto rounded-lg shadow-lg bg-white">
             <table className="w-full table-auto border-collapse">
               <thead className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
@@ -195,12 +243,19 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-blue-700">BK</h2>
             <button
               onClick={handleRefreshTable2}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-2 transition-colors duration-200"
+              className={`px-4 py-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 
+                active:scale-95 text-white rounded flex items-center gap-2 
+                transition-all duration-200 ${isLoading2 ? 'opacity-50' : ''}`}
+              disabled={isLoading2}
             >
-              <span>🔄</span>
-              รีเฟรชข้อมูล
+              <span className={`${isLoading2 ? 'animate-spin' : ''}`}>🔄</span>
+              {isLoading2 ? 'กำลังโหลด...' : 'รีเฟรชข้อมูล'}
             </button>
           </div>
+          <UpdateSpinsForm 
+            tableName="BK"
+            onUpdate={handleUpdate2}
+          />
           <div className="overflow-x-auto rounded-lg shadow-lg bg-white">
             <table className="w-full table-auto border-collapse">
               <thead className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
