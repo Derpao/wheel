@@ -30,7 +30,7 @@ export default function Home() {
     const dayOfMonth = date.getDate();
     const month = thaiMonths[date.getMonth()];
     const year = date.getFullYear() + 543; // Convert to Buddhist Era
-    const time = date.toLocaleTimeString('th-TH', { hour24: true });
+    const time = date.toLocaleTimeString('th-TH', { hour12: false });
     
     return `วัน${day}ที่ ${dayOfMonth} ${month} ${year} ${time}`;
   };
