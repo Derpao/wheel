@@ -1,101 +1,271 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [data1, setData1] = useState<any[]>([]);
+  const [data2, setData2] = useState<any[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Thai date formatting utility
+  const formatThaiDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const thaiMonths = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+    
+    const day = thaiDays[date.getDay()];
+    const dayOfMonth = date.getDate();
+    const month = thaiMonths[date.getMonth()];
+    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+    const time = date.toLocaleTimeString('th-TH', { hour24: true });
+    
+    return `วัน${day}ที่ ${dayOfMonth} ${month} ${year} ${time}`;
+  };
+
+  // ฟังก์ชันสำหรับดึงข้อมูลจากตารางแรก
+  const fetchData1 = () => {
+    fetch("/api")
+      .then((res) => res.json())
+      .then((result) => {
+        if (Array.isArray(result)) {
+          // Sort by timestamp in descending order
+          const sortedData = result.sort((a, b) => 
+            new Date(b.time_stamp).getTime() - new Date(a.time_stamp).getTime()
+          );
+          setData1(sortedData);
+        } else {
+          console.error("API response is not an array:", result);
+          setData1([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setData1([]);
+      });
+  };
+
+  // ฟังก์ชันสำหรับดึงข้อมูลจากตารางที่สอง
+  const fetchData2 = () => {
+    fetch("/api2")
+      .then((res) => res.json())
+      .then((result) => {
+        if (Array.isArray(result)) {
+          // Sort by timestamp in descending order
+          const sortedData = result.sort((a, b) => 
+            new Date(b.time_stamp).getTime() - new Date(a.time_stamp).getTime()
+          );
+          setData2(sortedData);
+        } else {
+          console.error("API response is not an array:", result);
+          setData2([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setData2([]);
+      });
+  };
+
+  // โหลดข้อมูลครั้งแรก
+  useEffect(() => {
+    fetchData1();
+    fetchData2();
+  }, []);
+
+  // แยกฟังก์ชันรีเฟรช
+  const handleRefreshTable1 = () => {
+    fetchData1();
+  };
+
+  const handleRefreshTable2 = () => {
+    fetchData2();
+  };
+
+  return (
+    <div className="p-6 max-w-[1920px] mx-auto bg-gray-100 min-h-screen">
+      <h1 className="text-4xl font-bold text-center text-blue-700 mb-8">
+        🏆 ตารางข้อมูล Roulette
+      </h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Table 1 */}
+        <div className="h-full">
+          <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-lg shadow">
+            <h2 className="text-2xl font-bold text-blue-700">JK</h2>
+            <button
+              onClick={handleRefreshTable1}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <span>🔄</span>
+              รีเฟรชข้อมูล
+            </button>
+          </div>
+          <div className="overflow-x-auto rounded-lg shadow-lg bg-white">
+            <table className="w-full table-auto border-collapse">
+              <thead className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
+                <tr>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    ID
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    📞 เบอร์โทรศัพท์
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🎟 รหัสคูปอง
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🔄 รอบหมุนที่เหลือ
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🌐 IP Address
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🍪 Cookie
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    📅 วันที่
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data1.length > 0 ? (
+                  data1.map((row: any, index: number) => (
+                    <tr
+                      key={index}
+                      className={`${
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      } hover:bg-blue-50`}
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-700">{row.id}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {row.phone_number}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-blue-600 font-medium">
+                        {row.coupon_code}
+                      </td>
+                      <td
+                        className={`px-6 py-4 text-sm font-semibold ${
+                          row.spins_left > 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {row.spinsleft}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {row.ip}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">
+                        {row.cookie}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {formatThaiDateTime(row.time_stamp)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="text-center px-6 py-10 text-gray-500 text-lg"
+                    >
+                      ❌ ไม่มีข้อมูล
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Table 2 */}
+        <div className="h-full">
+          <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-lg shadow">
+            <h2 className="text-2xl font-bold text-blue-700">BK</h2>
+            <button
+              onClick={handleRefreshTable2}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <span>🔄</span>
+              รีเฟรชข้อมูล
+            </button>
+          </div>
+          <div className="overflow-x-auto rounded-lg shadow-lg bg-white">
+            <table className="w-full table-auto border-collapse">
+              <thead className="bg-gradient-to-r from-blue-600 to-blue-400 text-white">
+                <tr>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    ID
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    📞 เบอร์โทรศัพท์
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🎟 รหัสคูปอง
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🔄 รอบหมุนที่เหลือ
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🌐 IP Address
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    🍪 Cookie
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold text-sm uppercase tracking-wide">
+                    📅 วันที่
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data2.length > 0 ? (
+                  data2.map((row: any, index: number) => (
+                    <tr
+                      key={index}
+                      className={`${
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      } hover:bg-blue-50`}
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-700">{row.id}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {row.phone_number}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-blue-600 font-medium">
+                        {row.coupon_code}
+                      </td>
+                      <td
+                        className={`px-6 py-4 text-sm font-semibold ${
+                          row.spins_left > 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {row.spinsleft}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {row.ip}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">
+                        {row.cookie}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {formatThaiDateTime(row.time_stamp)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="text-center px-6 py-10 text-gray-500 text-lg"
+                    >
+                      ❌ ไม่มีข้อมูล
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
