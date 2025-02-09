@@ -21,7 +21,15 @@ export async function GET() {
 
       connection.end(); // ปิดการเชื่อมต่อ
       return NextResponse.json(rows, { status: 200 });
-  } catch (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err: unknown) {
+    let message = 'An unknown error occurred';
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (err && typeof err === 'object' && 'message' in err) {
+      message = String(err.message);
+    } else if (typeof err === 'string') {
+      message = err;
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
